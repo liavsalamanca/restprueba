@@ -3,41 +3,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Layout: libro de reservas — captura arriba, cola de revisión, y tres vistas (agenda por día y servicio, plano de sala, recordatorios). */
+/* Paleta: rojo sangre de toro sobre blanco, letras negras (un solo tema claro, a propósito).
+   Layout: libro de reservas — captura arriba, cola de revisión, y tres vistas (agenda por día y servicio, plano de sala, recordatorios). */
 :root{
-  --bg:#f3f5f2; --surface:#ffffff; --sunk:#e8ece7; --line:#d5dbd3;
-  --fg:#18211c; --muted:#5d6a62;
-  --accent:#1d5c47; --accent-fg:#ffffff; --accent-soft:#dcebe4;
-  --amber:#a86a00; --amber-soft:#fbefd6;
-  --ok:#2c7a3f; --ok-soft:#dff1e3;
-  --bad:#b0392b; --bad-soft:#f8e1dd;
-  --info:#2f5f9e; --info-soft:#e1eaf7;
-  --floor:#eef1ec; --floor-grid:#dfe5dc;
+  --bg:#ffffff; --surface:#ffffff; --sunk:#f8f2f2; --line:#e8dadb;
+  --fg:#111111; --muted:#4b4344;
+  --accent:#7b1020; --accent-fg:#ffffff; --accent-soft:#f7e6e8; --accent-deep:#5c0a17;
+  --amber:#9a5b00; --amber-soft:#fcf1dc;
+  --ok:#2a6e3a; --ok-soft:#e3f2e6;
+  --bad:#c0261f; --bad-soft:#fde4e2;
+  --info:#111111; --info-soft:#f1ecec;
+  --floor:#fcf8f8; --floor-grid:#f1e6e7;
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --r:10px;
+  color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#111613; --surface:#18201b; --sunk:#202a24; --line:#2e3a33;
-  --fg:#e6ece8; --muted:#97a69d;
-  --accent:#5fbf98; --accent-fg:#0d1a14; --accent-soft:#1d3a2e;
-  --amber:#e7ad45; --amber-soft:#3a2d14;
-  --ok:#6fcf86; --ok-soft:#1b3322;
-  --bad:#f08575; --bad-soft:#3d1f1b;
-  --info:#8db4ec; --info-soft:#1d2a3d;
-  --floor:#151c18; --floor-grid:#222c26;
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#111613; --surface:#18201b; --sunk:#202a24; --line:#2e3a33;
-  --fg:#e6ece8; --muted:#97a69d;
-  --accent:#5fbf98; --accent-fg:#0d1a14; --accent-soft:#1d3a2e;
-  --amber:#e7ad45; --amber-soft:#3a2d14;
-  --ok:#6fcf86; --ok-soft:#1b3322;
-  --bad:#f08575; --bad-soft:#3d1f1b;
-  --info:#8db4ec; --info-soft:#1d2a3d;
-  --floor:#151c18; --floor-grid:#222c26;
-  color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
@@ -65,13 +47,19 @@ label.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--
 label.f input,label.f select,label.f textarea{font-size:.92rem}
 
 /* Header */
-header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;background:var(--accent);color:var(--accent-fg);border-radius:16px;padding:22px 24px;border-bottom:5px solid var(--accent-deep)}
+header.top .eyebrow,header.top .muted{color:#f3d6da}
+header.top .stat{border-color:transparent}
+header.top .stat b,header.top .stat span{color:var(--fg)}
+header.top .stat span{color:var(--muted)}
+header.top .stat.alert b{color:var(--bad)}
+header.top .stat.warn b{color:var(--accent)}
 .brand{display:flex;flex-direction:column;gap:2px}
 .stats{display:flex;gap:10px;flex-wrap:wrap}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;min-width:104px}
 .stat b{display:block;font-family:var(--display);font-size:1.45rem;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat span{font-size:.75rem;color:var(--muted)}
-.stat.warn b{color:var(--amber)}
+.stat.warn b{color:var(--accent)}
 .stat.alert b{color:var(--bad)}
 
 /* Capture */
@@ -589,8 +577,9 @@ function render(){
   const cc = $("#confCount"); cc.textContent = pend.length; cc.classList.toggle("zero", !urg.length);
 
   const note = $("#dbNote");
-  if (usingExamples){ note.hidden=false; note.textContent = db ? "Todavía no hay reservas guardadas. Las que ves son de muestra para que veas cómo queda todo, y desaparecen al guardar la primera reserva real." : "Conectando con el libro de reservas… Mientras tanto ves reservas de muestra."; }
-  else if (!note.dataset.sticky) note.hidden = true;
+  if (note.dataset.sticky){ note.hidden=false; }
+  else if (usingExamples){ note.hidden=false; note.textContent = db ? "Todavía no hay reservas guardadas. Las que ves son de muestra para que veas cómo queda todo, y desaparecen al guardar la primera reserva real." : "Conectando con el libro de reservas… Mientras tanto ves reservas de muestra."; }
+  else note.hidden = true;
 
   document.querySelectorAll(".tabs [data-view]").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.view===view)));
   $("#vAgenda").hidden = view!=="agenda"; $("#vPlano").hidden = view!=="plano"; $("#vConfirmar").hidden = view!=="confirmar";
@@ -1034,6 +1023,8 @@ if (window.claude?.use){
   });
 } else {
   $("#aiNote").hidden=false; $("#aiNote").textContent="Abre esta página en Claude para que lea los pantallazos automáticamente.";
+  const n=$("#dbNote"); n.hidden=false; n.dataset.sticky="1";
+  n.innerHTML = 'Esta es una copia de muestra: aquí no se guardan reservas ni se leen pantallazos. Para usar el libro de verdad, ábrelo en Claude: <a href="https://claude.ai/artifact/2oa2CzAHg7hAegSD3ySMnn" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Libro de Reservas en Claude</a>.';
 }
 })();
 </script>
