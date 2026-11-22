@@ -1,0 +1,664 @@
+<title>Libro de Reservas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: libro de reservas — barra de captura arriba, cola de revisión, y la agenda agrupada por día como hojas de un libro de sala. */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --sunk:#e8ece7; --line:#d5dbd3;
+  --fg:#18211c; --muted:#5d6a62;
+  --accent:#1d5c47; --accent-fg:#ffffff; --accent-soft:#dcebe4;
+  --amber:#a86a00; --amber-soft:#fbefd6;
+  --ok:#2c7a3f; --ok-soft:#dff1e3;
+  --bad:#b0392b; --bad-soft:#f8e1dd;
+  --info:#2f5f9e; --info-soft:#e1eaf7;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111613; --surface:#18201b; --sunk:#202a24; --line:#2e3a33;
+  --fg:#e6ece8; --muted:#97a69d;
+  --accent:#5fbf98; --accent-fg:#0d1a14; --accent-soft:#1d3a2e;
+  --amber:#e7ad45; --amber-soft:#3a2d14;
+  --ok:#6fcf86; --ok-soft:#1b3322;
+  --bad:#f08575; --bad-soft:#3d1f1b;
+  --info:#8db4ec; --info-soft:#1d2a3d;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --surface:#18201b; --sunk:#202a24; --line:#2e3a33;
+  --fg:#e6ece8; --muted:#97a69d;
+  --accent:#5fbf98; --accent-fg:#0d1a14; --accent-soft:#1d3a2e;
+  --amber:#e7ad45; --amber-soft:#3a2d14;
+  --ok:#6fcf86; --ok-soft:#1b3322;
+  --bad:#f08575; --bad-soft:#3d1f1b;
+  --info:#8db4ec; --info-soft:#1d2a3d;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.9rem;font-weight:700}
+h2{font-size:1.25rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+.eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,.btn{font:inherit;font-weight:600;font-size:.9rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap}
+button:hover,.btn:hover{border-color:var(--muted)}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary,.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+button.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+button.ghost:hover{color:var(--fg);background:var(--sunk)}
+button.danger{color:var(--bad)}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:58px}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);font-weight:500;min-width:0}
+label.f input,label.f select,label.f textarea{font-size:.92rem}
+
+/* Header */
+header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+.brand{display:flex;flex-direction:column;gap:2px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;min-width:104px}
+.stat b{display:block;font-family:var(--display);font-size:1.45rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.75rem;color:var(--muted)}
+.stat.warn b{color:var(--amber)}
+
+/* Capture */
+.capture{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+@media (max-width:760px){.capture{grid-template-columns:1fr}}
+.drop{border:2px dashed var(--line);border-radius:14px;background:var(--surface);padding:26px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop .ico{width:46px;height:46px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.drop p{margin:0;max-width:44ch}
+.how{background:var(--sunk);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.how ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.notice{border-radius:8px;padding:9px 12px;font-size:.86rem;background:var(--amber-soft);color:var(--fg);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent)}
+.notice.info{background:var(--info-soft);border-color:color-mix(in srgb,var(--info) 35%,transparent)}
+
+/* Review queue */
+.queue{display:flex;flex-direction:column;gap:12px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.qcard{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:var(--r);padding:14px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px}
+@media (max-width:620px){.qcard{grid-template-columns:1fr}}
+.qcard.err{border-left-color:var(--bad)}
+.qcard .thumb{width:100%;max-height:260px;object-fit:cover;object-position:top;border-radius:7px;border:1px solid var(--line);background:var(--sunk);cursor:zoom-in}
+.qform{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.qform .span2{grid-column:span 2}.qform .span4{grid-column:1/-1}
+@media (max-width:620px){.qform{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.qactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;grid-column:1/-1;align-items:center}
+.qactions .grow{flex:1;font-size:.82rem;color:var(--muted)}
+.spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+
+/* Toolbar */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.toolbar input[type=search]{flex:1 1 220px;width:auto}
+.toolbar select,.toolbar input[type=date]{width:auto;flex:0 0 auto}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;padding:7px 12px;font-weight:500}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg)}
+
+/* Agenda */
+.day{display:flex;flex-direction:column;gap:8px}
+.dayhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:6px}
+.dayhead .tag{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:99px}
+.dayhead .sum{margin-left:auto;font-size:.82rem;color:var(--muted)}
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:22px 64px minmax(0,1.6fr) 74px minmax(0,1.4fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer}
+.row:hover{border-color:var(--muted)}
+.row.cancel{opacity:.55}
+.row.cancel .who{text-decoration:line-through}
+.row .time{font-family:var(--mono);font-weight:500;font-size:1rem}
+.row .who{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .who small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.row .pax{font-variant-numeric:tabular-nums;font-size:.9rem}
+.row .pax b{font-family:var(--display);font-size:1.1rem}
+.row .note{font-size:.84rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent)}
+@media (max-width:720px){
+  .row{grid-template-columns:22px 56px minmax(0,1fr) auto;row-gap:4px}
+  .row .note{grid-column:3/-1}
+  .row .pax{grid-column:3}
+  .row .pills{grid-column:3/-1;justify-content:flex-start}
+}
+[hidden]{display:none!important}
+.pill{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.p-pendiente{background:var(--amber-soft);color:var(--amber)}
+.p-confirmada{background:var(--ok-soft);color:var(--ok)}
+.p-cancelada{background:var(--bad-soft);color:var(--bad)}
+.sent{font-size:.7rem;font-weight:600;color:var(--info);background:var(--info-soft);padding:3px 8px;border-radius:99px;white-space:nowrap}
+.pills{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:34px 20px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+.example-flag{font-size:.7rem;font-weight:700;background:var(--sunk);color:var(--muted);padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.06em}
+
+/* Send bar */
+.sendbar{position:sticky;bottom:0;z-index:6;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:env(safe-area-inset-bottom,0px);display:flex;gap:10px;flex-wrap:wrap;align-items:center;box-shadow:0 6px 24px rgb(0 0 0 / .12)}
+.sendbar .grow{flex:1;font-size:.9rem;min-width:160px}
+
+/* Dialogs */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg);padding:0;width:min(860px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgb(10 15 12 / .55)}
+.dlg{display:flex;flex-direction:column;max-height:calc(100vh - 42px)}
+.dlg header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dlg .body{padding:16px 18px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.dlg footer{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line);align-items:center}
+.dlg footer .grow{flex:1;font-size:.84rem;color:var(--muted)}
+.detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+@media (max-width:680px){.detail{grid-template-columns:1fr}}
+.detail img{width:100%;border-radius:8px;border:1px solid var(--line)}
+.noimg{background:var(--sunk);border-radius:8px;padding:30px;text-align:center;color:var(--muted);font-size:.9rem}
+pre.mail{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:.8rem;background:var(--sunk);border-radius:8px;padding:12px;max-height:340px;overflow:auto}
+.addr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.addr input{flex:1 1 220px;width:auto}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:8px;font-weight:600;font-size:.9rem;z-index:50;max-width:calc(100vw - 32px)}
+.big img{width:100%}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">Sala · Gestión de reservas</span>
+      <h1>Libro de Reservas</h1>
+      <span class="muted" id="today"></span>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section class="capture">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Subir pantallazos de reservas">
+      <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" fill="none"/><circle cx="9" cy="9" r="2" fill="none"/><path d="M21 15l-5-5L5 21" fill="none"/></svg></div>
+      <h3>Sube los pantallazos de las reservas</h3>
+      <p class="muted">Arrastra aquí las capturas de WhatsApp, Instagram, correo o la web, haz clic para elegirlas, o pégalas con Ctrl+V. Claude lee cada una y llena la ficha por ti.</p>
+      <input type="file" id="file" accept="image/*" multiple hidden>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <button class="primary" id="pick" type="button">Elegir pantallazos</button>
+        <button id="manual" type="button">Añadir a mano</button>
+      </div>
+      <div id="aiNote" class="notice" hidden></div>
+    </div>
+    <div class="how">
+      <span class="eyebrow">Cómo funciona</span>
+      <ol>
+        <li><b>Sube</b> uno o varios pantallazos. Si un chat trae varias reservas, salen todas.</li>
+        <li><b>Revisa</b> la ficha: nombre, fecha, hora, personas, teléfono y notas. Corrige lo que haga falta.</li>
+        <li><b>Guarda</b> y la reserva entra en la agenda, ordenada por día y hora.</li>
+        <li><b>Envía</b> las reservas nuevas al correo del restaurante con un resumen listo.</li>
+      </ol>
+      <div class="notice info">Destino del correo: <b class="mono" id="destShow"></b></div>
+    </div>
+  </section>
+
+  <section class="queue" id="queueSec" hidden>
+    <div class="qhead">
+      <div><span class="eyebrow">Por revisar</span><h2 id="qTitle">Fichas leídas de los pantallazos</h2></div>
+      <div style="display:flex;gap:8px"><button id="saveAll" class="primary" type="button">Guardar todas</button><button id="clearQ" class="ghost" type="button">Descartar todas</button></div>
+    </div>
+    <div id="queue" class="queue"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Buscar nombre, teléfono, notas…" aria-label="Buscar">
+      <div class="seg" role="group" aria-label="Periodo">
+        <button type="button" data-range="proximas" aria-pressed="true">Próximas</button>
+        <button type="button" data-range="hoy" aria-pressed="false">Hoy</button>
+        <button type="button" data-range="todas" aria-pressed="false">Todas</button>
+      </div>
+      <select id="fStatus" aria-label="Estado">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendientes</option>
+        <option value="confirmada">Confirmadas</option>
+        <option value="cancelada">Canceladas</option>
+        <option value="noenviada">Sin enviar</option>
+      </select>
+      <button type="button" id="settingsBtn" class="ghost">Ajustes</button>
+    </div>
+    <div id="dbNote" class="notice" hidden></div>
+    <div id="agenda" style="display:flex;flex-direction:column;gap:22px"></div>
+  </section>
+
+  <div class="sendbar" id="sendbar">
+    <div class="grow" id="selInfo"></div>
+    <button type="button" id="selUnsent" class="ghost">Seleccionar sin enviar</button>
+    <button type="button" id="selNone" class="ghost">Quitar selección</button>
+    <button type="button" id="sendBtn" class="primary">Preparar correo</button>
+  </div>
+</div>
+
+<dialog id="dDetail"><div class="dlg">
+  <header><div><span class="eyebrow" id="dEyebrow">Reserva</span><h2 id="dTitle"></h2></div><button class="ghost" type="button" data-close>Cerrar</button></header>
+  <div class="body"><div class="detail"><div id="dImg"></div><form id="dForm" class="qform"></form></div></div>
+  <footer><span class="grow" id="dMeta"></span><button type="button" class="danger" id="dDel">Eliminar</button><button type="button" class="primary" id="dSave">Guardar cambios</button></footer>
+</div></dialog>
+
+<dialog id="dSend"><div class="dlg">
+  <header><div><span class="eyebrow">Enviar al restaurante</span><h2 id="sTitle">Correo de reservas</h2></div><button class="ghost" type="button" data-close>Cerrar</button></header>
+  <div class="body">
+    <label class="f">Para<div class="addr"><input id="sTo" type="email"><button type="button" id="copyTo">Copiar dirección</button></div></label>
+    <label class="f">Asunto<input id="sSubj"></label>
+    <div><div class="eyebrow" style="margin-bottom:6px">Mensaje</div><pre class="mail" id="sBody"></pre></div>
+    <div class="notice info" id="sHelp">«Abrir en mi correo» intenta abrir tu app de correo con todo escrito. Si no se abre, usa «Copiar mensaje» y pégalo en un correo nuevo a la dirección de arriba. Para adjuntar la hoja de cálculo, descarga el CSV.</div>
+  </div>
+  <footer>
+    <span class="grow" id="sNote"></span>
+    <button type="button" id="copyMail">Copiar mensaje</button>
+    <button type="button" id="dlCsv">Descargar CSV</button>
+    <a class="btn" id="mailto" href="#" target="_blank" rel="noopener">Abrir en mi correo</a>
+    <button type="button" class="primary" id="markSent">Marcar como enviadas</button>
+  </footer>
+</div></dialog>
+
+<dialog id="dSettings"><div class="dlg" style="max-width:520px">
+  <header><h2>Ajustes</h2><button class="ghost" type="button" data-close>Cerrar</button></header>
+  <div class="body">
+    <label class="f">Correo donde se envían las reservas<input id="setEmail" type="email"></label>
+    <label class="f">Nombre del restaurante (aparece en el correo)<input id="setName"></label>
+    <p class="muted" style="margin:0;font-size:.85rem">Se guarda para todo el equipo que use esta página.</p>
+  </div>
+  <footer><button type="button" class="primary" id="setSave">Guardar ajustes</button></footer>
+</div></dialog>
+
+<dialog id="dBig" class="big"><div class="dlg"><header><h3>Pantallazo</h3><button class="ghost" type="button" data-close>Cerrar</button></header><div class="body"><img id="bigImg" alt="Pantallazo de la reserva"></div></div></dialog>
+
+<script>
+(() => {
+const DEFAULT_EMAIL = "info@taikinsa.s.co";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const TODAY = isoDay(new Date());
+const TOMORROW = isoDay(new Date(Date.now()+864e5));
+const fmtLong = iso => { if(!iso) return "Sin fecha"; const [y,m,d]=iso.split("-").map(Number); const s=new Date(y,m-1,d).toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long",year: y!==new Date().getFullYear()?"numeric":undefined}); return s.charAt(0).toUpperCase()+s.slice(1); };
+const STATUSES = ["pendiente","confirmada","cancelada"];
+const CANALES = ["WhatsApp","Instagram","Facebook","Correo","Llamada","Web","Otro"];
+const FIELDS = [
+  ["nombre","Nombre","text","span2"],["telefono","Teléfono","tel",""],["personas","Personas","number",""],
+  ["fecha","Fecha","date",""],["hora","Hora","time",""],["canal","Canal","canal",""],["estado","Estado","estado",""],
+  ["email","Correo del cliente","email","span2"],["zona","Mesa / zona","text",""],["ocasion","Ocasión","text",""],
+  ["notas","Notas (alergias, peticiones, abono…)","textarea","span4"]
+];
+
+$("#today").textContent = fmtLong(TODAY);
+
+/* ---------- state ---------- */
+let db = null, sample = null, downloads = null;
+let reservas = [];        // {id, ...fields, thumb, creado, enviada}
+let usingExamples = true;
+let settings = { email: DEFAULT_EMAIL, restaurante: "" };
+let queue = [];           // {qid, status:'leyendo'|'listo'|'error', data, thumb, msg}
+let selected = new Set();
+let range = "proximas";
+try { const r = localStorage.getItem("lr_range"); if (r) range = r; } catch {}
+
+const EXAMPLES = [
+  {id:"ej1",nombre:"Ana María Gómez",telefono:"+57 300 412 8890",personas:4,fecha:TODAY,hora:"20:00",canal:"WhatsApp",estado:"confirmada",zona:"Terraza",ocasion:"Cumpleaños",notas:"Traen torta. Una persona celíaca.",ejemplo:true},
+  {id:"ej2",nombre:"Carlos Restrepo",telefono:"+57 315 220 1043",personas:2,fecha:TODAY,hora:"21:30",canal:"Instagram",estado:"pendiente",notas:"Pide mesa junto a la ventana.",ejemplo:true},
+  {id:"ej3",nombre:"Familia Ortiz",telefono:"+57 301 998 7712",personas:7,fecha:TOMORROW,hora:"13:00",canal:"Llamada",estado:"pendiente",zona:"Salón",notas:"Silla para bebé.",ejemplo:true},
+];
+
+/* ---------- helpers ---------- */
+let toastT;
+function toast(msg){ let t=$(".toast"); if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t);} t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+async function copy(text, okMsg){
+  try { await navigator.clipboard.writeText(text); toast(okMsg||"Copiado"); }
+  catch { const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); let ok=false; try{ok=document.execCommand("copy");}catch{} ta.remove(); toast(ok?(okMsg||"Copiado"):"No se pudo copiar: selecciona el texto y cópialo a mano"); }
+}
+function normalize(r){
+  const o = {};
+  o.nombre = (r.nombre||"").toString().trim();
+  o.telefono = (r.telefono||"").toString().trim();
+  o.email = (r.email||"").toString().trim();
+  const p = parseInt(r.personas,10); o.personas = Number.isFinite(p)&&p>0 ? p : "";
+  o.fecha = /^\d{4}-\d{2}-\d{2}$/.test(r.fecha||"") ? r.fecha : "";
+  let h = (r.hora||"").toString().trim(); const m = h.match(/^(\d{1,2}):(\d{2})/); o.hora = m ? `${pad(+m[1])}:${m[2]}` : "";
+  o.canal = CANALES.includes(r.canal) ? r.canal : (r.canal ? "Otro" : "");
+  o.estado = STATUSES.includes(r.estado) ? r.estado : "pendiente";
+  o.zona = (r.zona||"").toString().trim();
+  o.ocasion = (r.ocasion||"").toString().trim();
+  o.notas = (r.notas||"").toString().trim();
+  return o;
+}
+function fieldHTML(prefix, data){
+  return FIELDS.map(([k,label,type,cls]) => {
+    const v = data[k] ?? ""; const id = `${prefix}-${k}`;
+    let ctl;
+    if (type==="textarea") ctl = `<textarea id="${id}" name="${k}">${esc(v)}</textarea>`;
+    else if (type==="canal") ctl = `<select id="${id}" name="${k}"><option value="">—</option>${CANALES.map(c=>`<option ${c===v?"selected":""}>${c}</option>`).join("")}</select>`;
+    else if (type==="estado") ctl = `<select id="${id}" name="${k}">${STATUSES.map(c=>`<option value="${c}" ${c===v?"selected":""}>${c[0].toUpperCase()+c.slice(1)}</option>`).join("")}</select>`;
+    else ctl = `<input id="${id}" name="${k}" type="${type}" ${type==="number"?'min="1" inputmode="numeric"':""} value="${esc(v)}">`;
+    return `<label class="f ${cls}">${label}${ctl}</label>`;
+  }).join("");
+}
+function readForm(form){ const o={}; FIELDS.forEach(([k])=>{ const el=form.querySelector(`[name="${k}"]`); o[k]=el?el.value:""; }); return normalize(o); }
+function dupOf(d){ return reservas.find(r => !r.ejemplo && r.fecha && r.fecha===d.fecha && r.hora===d.hora && r.nombre && d.nombre && r.nombre.toLowerCase()===d.nombre.toLowerCase()); }
+
+/* ---------- images ---------- */
+function loadImg(file){ return new Promise((res,rej)=>{ const u=URL.createObjectURL(file); const i=new Image(); i.onload=()=>{res(i);}; i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("img"));}; i.src=u; }); }
+function scaled(img, maxW, type, q){ const s=Math.min(1,maxW/img.naturalWidth); const c=document.createElement("canvas"); c.width=Math.round(img.naturalWidth*s); c.height=Math.round(img.naturalHeight*s); c.getContext("2d").drawImage(img,0,0,c.width,c.height); return c; }
+async function prepare(file){
+  const img = await loadImg(file);
+  const thumbC = scaled(img, 520); let thumb = thumbC.toDataURL("image/jpeg",0.68);
+  if (thumb.length > 180000) thumb = scaled(img, 360).toDataURL("image/jpeg",0.6);
+  const big = scaled(img, 1600);
+  const blob = await new Promise(r => big.toBlob(r,"image/jpeg",0.85));
+  return { thumb, blob };
+}
+
+/* ---------- AI extraction ---------- */
+function prompt(){
+  return `Eres el asistente de sala de un restaurante en Colombia. La imagen es un pantallazo (WhatsApp, Instagram, correo, web, libreta…) con una o varias solicitudes de reserva.
+Hoy es ${TODAY} (${fmtLong(TODAY)}). Convierte fechas relativas ("mañana", "este sábado", "el 5") a fecha absoluta AAAA-MM-DD, eligiendo la próxima fecha futura. Convierte horas a formato 24 h HH:MM ("8 pm" -> "20:00"; "1 de la tarde" -> "13:00").
+Devuelve SOLO JSON con esta forma:
+{"reservas":[{"nombre":"","telefono":"","email":"","personas":0,"fecha":"AAAA-MM-DD","hora":"HH:MM","canal":"WhatsApp|Instagram|Facebook|Correo|Llamada|Web|Otro","estado":"pendiente|confirmada|cancelada","zona":"","ocasion":"","notas":""}],"dudas":""}
+Reglas: deja "" (o 0 en personas) lo que no aparezca; no inventes. El nombre puede ser el nombre del contacto del chat. "estado" es "confirmada" solo si el restaurante confirmó en la conversación; "cancelada" si se canceló; si no, "pendiente". En "notas" pon alergias, peticiones especiales, abonos o depósitos, y cualquier detalle útil para la sala. En "dudas" explica en una frase lo que no se pudo leer con seguridad. Si la imagen no contiene ninguna reserva devuelve {"reservas":[],"dudas":"No parece una reserva"}.`;
+}
+async function extract(item){
+  try{
+    const out = await sample.json(prompt(), { images: [item.blob], modelTier: "default" });
+    const list = Array.isArray(out?.reservas) ? out.reservas : [];
+    const idx = queue.indexOf(item);
+    if (!list.length){ item.status="error"; item.data=normalize({}); item.msg = out?.dudas || "No se encontró una reserva en esta imagen. Puedes llenarla a mano."; render(); return; }
+    const items = list.map((r,i) => ({ qid: item.qid+"-"+i, status:"listo", data: normalize(r), thumb:item.thumb, msg: i===0 ? (out.dudas||"") : "" }));
+    queue.splice(idx,1,...items);
+  } catch(e){
+    item.status="error"; item.data=normalize({});
+    const c = e && e.code;
+    item.msg = c==="not_granted" ? "No se dio permiso para usar Claude. Llena la ficha a mano." :
+               c==="rate_limited" ? "Demasiadas lecturas seguidas. Espera un minuto o llena la ficha a mano." :
+               c==="image_rejected" ? "Este archivo no se pudo leer como imagen." :
+               "No se pudo leer el pantallazo. Llena la ficha a mano.";
+  }
+  render();
+}
+async function addFiles(files){
+  const imgs = [...files].filter(f => f.type.startsWith("image/"));
+  if (!imgs.length) return;
+  for (const f of imgs){
+    const qid = "q"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    let prep; try { prep = await prepare(f); } catch { toast("Uno de los archivos no es una imagen válida"); continue; }
+    const item = { qid, status: sample ? "leyendo" : "listo", data: normalize({}), thumb: prep.thumb, blob: prep.blob, msg: sample ? "" : "La lectura automática no está disponible aquí. Llena la ficha mirando el pantallazo." };
+    queue.push(item); render();
+    if (sample) extract(item);  // in parallel, each one independent
+  }
+  $("#queueSec").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ---------- persistence ---------- */
+async function saveReserva(data, thumb){
+  const doc = { ...data, thumb: thumb||"", creado: new Date().toISOString(), enviada: "" };
+  if (!db){ reservas.push({ id:"local"+Date.now(), ...doc }); usingExamples=false; reservas=reservas.filter(r=>!r.ejemplo); render(); return true; }
+  try { await db.collection("reservas").add(doc); return true; }
+  catch(e){ toast(e?.code==="quota_exceeded" ? "La base de datos está llena: elimina reservas antiguas." : e?.code==="permission_denied" ? "No tienes permiso para guardar reservas en esta página." : "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo."); return false; }
+}
+async function updateReserva(id, patch){
+  const r = reservas.find(x=>x.id===id); if (!r) return false;
+  if (!db || r.ejemplo){ Object.assign(r, patch); render(); return true; }
+  try { await db.doc("reservas/"+id).update(patch); return true; } catch { toast("No se pudo actualizar la reserva."); return false; }
+}
+async function deleteReserva(id){
+  const r = reservas.find(x=>x.id===id);
+  if (!db || r?.ejemplo){ reservas = reservas.filter(x=>x.id!==id); selected.delete(id); render(); return; }
+  try { await db.doc("reservas/"+id).delete(); selected.delete(id); } catch { toast("No se pudo eliminar."); }
+}
+
+/* ---------- render ---------- */
+function visible(){
+  const q = $("#q").value.trim().toLowerCase(); const st = $("#fStatus").value;
+  return reservas.filter(r => {
+    if (range==="hoy" && r.fecha!==TODAY) return false;
+    if (range==="proximas" && r.fecha && r.fecha < TODAY) return false;
+    if (st==="noenviada"){ if (r.enviada) return false; } else if (st && r.estado!==st) return false;
+    if (q && ![r.nombre,r.telefono,r.email,r.notas,r.zona,r.ocasion,r.canal].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=> (a.fecha||"9999").localeCompare(b.fecha||"9999") || (a.hora||"99").localeCompare(b.hora||"99"));
+}
+function render(){
+  $("#destShow").textContent = settings.email || DEFAULT_EMAIL;
+  // stats
+  const hoy = reservas.filter(r=>r.fecha===TODAY && r.estado!=="cancelada");
+  const prox = reservas.filter(r=>r.fecha>=TODAY && r.estado!=="cancelada");
+  const pend = reservas.filter(r=>r.estado==="pendiente" && (!r.fecha || r.fecha>=TODAY));
+  const noenv = reservas.filter(r=>!r.enviada && r.estado!=="cancelada");
+  $("#stats").innerHTML = [
+    [hoy.length,"reservas hoy",""],[hoy.reduce((s,r)=>s+(+r.personas||0),0),"personas hoy",""],
+    [prox.length,"próximas",""],[pend.length,"por confirmar",pend.length?"warn":""],[noenv.length,"sin enviar",noenv.length?"warn":""]
+  ].map(([n,l,c])=>`<div class="stat ${c}"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  // queue
+  $("#queueSec").hidden = !queue.length;
+  $("#qTitle").textContent = queue.length===1 ? "1 ficha por revisar" : `${queue.length} fichas por revisar`;
+  $("#saveAll").disabled = !queue.some(i=>i.status!=="leyendo");
+  const qEl = $("#queue");
+  // keep in-progress edits: only re-render cards whose status changed
+  const existing = new Map([...qEl.children].map(c=>[c.dataset.qid,c]));
+  const frag = document.createDocumentFragment();
+  queue.forEach(item => {
+    let card = existing.get(item.qid);
+    if (!card || card.dataset.status !== item.status){
+      card = document.createElement("article");
+      card.className = "qcard"+(item.status==="error"?" err":"");
+      card.dataset.qid = item.qid; card.dataset.status = item.status;
+      const thumb = item.thumb ? `<img class="thumb" src="${item.thumb}" alt="Pantallazo" data-big>` : `<div class="noimg">Sin pantallazo</div>`;
+      if (item.status==="leyendo"){
+        card.innerHTML = `${thumb}<div style="display:flex;align-items:center;gap:10px"><span class="spin"></span><span>Claude está leyendo el pantallazo…</span></div>`;
+      } else {
+        card.innerHTML = `${thumb}<form class="qform" onsubmit="return false">${fieldHTML(item.qid, item.data)}
+          <div class="qactions"><span class="grow" data-msg></span>
+          <button type="button" class="ghost" data-act="discard">Descartar</button>
+          <button type="button" class="primary" data-act="save">Guardar reserva</button></div></form>`;
+      }
+    }
+    const msgEl = card.querySelector("[data-msg]");
+    if (msgEl){
+      const d = card.querySelector("form") ? readForm(card.querySelector("form")) : item.data;
+      const dup = dupOf(d);
+      const missing = ["nombre","fecha","hora","personas"].filter(k=>!d[k]).map(k=>({nombre:"nombre",fecha:"fecha",hora:"hora",personas:"personas"}[k]));
+      msgEl.textContent = [item.msg, dup ? "Ojo: ya hay una reserva con ese nombre, fecha y hora." : "", missing.length ? "Falta: "+missing.join(", ")+"." : ""].filter(Boolean).join(" ");
+    }
+    frag.appendChild(card);
+  });
+  qEl.replaceChildren(frag);
+
+  // db note
+  const note = $("#dbNote");
+  if (usingExamples){ note.hidden=false; note.textContent = db ? "Todavía no hay reservas guardadas. Abajo ves tres ejemplos para que veas cómo queda; desaparecen al guardar la primera reserva." : "Conectando con el libro de reservas… Mientras tanto ves ejemplos."; }
+  else note.hidden = true;
+
+  // agenda
+  const list = visible();
+  const ag = $("#agenda");
+  if (!list.length){
+    ag.innerHTML = `<div class="empty"><h3>No hay reservas en esta vista</h3><span class="muted">${range!=="todas"?"Prueba con «Todas» o cambia el filtro. ":""}Sube un pantallazo arriba para añadir la primera.</span></div>`;
+  } else {
+    const groups = new Map(); list.forEach(r => { const k=r.fecha||""; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r); });
+    ag.innerHTML = [...groups].map(([day, rs]) => {
+      const active = rs.filter(r=>r.estado!=="cancelada");
+      const tag = day===TODAY?"Hoy":day===TOMORROW?"Mañana":(day && day<TODAY?"Pasada":"");
+      return `<div class="day"><div class="dayhead"><h3>${esc(fmtLong(day))}</h3>${tag?`<span class="tag">${tag}</span>`:""}
+        <span class="sum">${active.length} ${active.length===1?"reserva":"reservas"} · ${active.reduce((s,r)=>s+(+r.personas||0),0)} personas</span></div>
+        <div class="rows">${rs.map(r=>`<div class="row ${r.estado==="cancelada"?"cancel":""}" data-id="${esc(r.id)}" tabindex="0">
+          <input type="checkbox" data-sel aria-label="Seleccionar para enviar" ${selected.has(r.id)?"checked":""}>
+          <span class="time">${esc(r.hora||"--:--")}</span>
+          <span class="who">${esc(r.nombre||"Sin nombre")} ${r.ejemplo?'<span class="example-flag">Ejemplo</span>':""}<small>${esc([r.telefono,r.canal].filter(Boolean).join(" · ")||"Sin teléfono")}</small></span>
+          <span class="pax"><b>${esc(r.personas||"?")}</b> pers.</span>
+          <span class="note">${esc([r.zona,r.ocasion,r.notas].filter(Boolean).join(" · "))}</span>
+          <span class="pills"><span class="pill p-${esc(r.estado)}">${esc(r.estado[0].toUpperCase()+r.estado.slice(1))}</span>${r.enviada?`<span class="sent" title="Enviada el ${esc(new Date(r.enviada).toLocaleString("es-CO"))}">Enviada</span>`:""}</span>
+        </div>`).join("")}</div></div>`;
+    }).join("");
+  }
+  // selection bar
+  [...selected].forEach(id => { if(!reservas.some(r=>r.id===id)) selected.delete(id); });
+  const n = selected.size;
+  $("#selInfo").innerHTML = n ? `<b>${n}</b> ${n===1?"reserva seleccionada":"reservas seleccionadas"} para enviar` : `Marca reservas con la casilla, o usa «Seleccionar sin enviar».`;
+  $("#sendBtn").disabled = !n; $("#selNone").hidden = !n;
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.range===range)));
+}
+
+/* ---------- events ---------- */
+const drop = $("#drop"), fileIn = $("#file");
+$("#pick").onclick = e => { e.stopPropagation(); fileIn.click(); };
+drop.onclick = e => { if (e.target===drop || e.target.closest("h3,p,.ico")) fileIn.click(); };
+drop.onkeydown = e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); fileIn.click(); } };
+fileIn.onchange = () => { addFiles(fileIn.files); fileIn.value=""; };
+["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+document.addEventListener("paste", e => { const fs=[...(e.clipboardData?.files||[])]; if (fs.length){ e.preventDefault(); addFiles(fs); } });
+$("#manual").onclick = e => { e.stopPropagation(); queue.push({qid:"m"+Date.now().toString(36), status:"listo", data:normalize({fecha:TODAY}), thumb:"", msg:""}); render(); $("#queueSec").scrollIntoView({behavior:"smooth"}); };
+
+$("#queue").addEventListener("input", e => { const card=e.target.closest(".qcard"); const item=queue.find(i=>i.qid===card?.dataset.qid); if(item){ item.data = readForm(card.querySelector("form")); } });
+$("#queue").addEventListener("change", () => render());
+$("#queue").addEventListener("click", async e => {
+  if (e.target.matches("[data-big]")) return openBig(e.target.src);
+  const btn = e.target.closest("[data-act]"); if (!btn) return;
+  const card = btn.closest(".qcard"); const item = queue.find(i=>i.qid===card.dataset.qid); if (!item) return;
+  if (btn.dataset.act==="discard"){ queue = queue.filter(i=>i!==item); render(); return; }
+  const data = readForm(card.querySelector("form"));
+  if (!data.nombre && !data.telefono){ toast("Pon al menos el nombre o el teléfono"); return; }
+  btn.disabled = true; btn.textContent = "Guardando…";
+  if (await saveReserva(data, item.thumb)){ queue = queue.filter(i=>i!==item); toast("Reserva guardada"); }
+  else { btn.disabled=false; btn.textContent="Guardar reserva"; }
+  render();
+});
+$("#saveAll").onclick = async () => {
+  const cards = [...$("#queue").children]; let ok=0, skip=0;
+  $("#saveAll").disabled = true;
+  for (const card of cards){
+    const item = queue.find(i=>i.qid===card.dataset.qid); const form = card.querySelector("form");
+    if (!item || !form) { skip++; continue; }
+    const data = readForm(form); if (!data.nombre && !data.telefono){ skip++; continue; }
+    if (await saveReserva(data, item.thumb)){ queue = queue.filter(i=>i!==item); ok++; }
+  }
+  toast(`${ok} ${ok===1?"reserva guardada":"reservas guardadas"}${skip?` · ${skip} quedan por revisar`:""}`); render();
+};
+let clearArm=false;
+$("#clearQ").onclick = () => { if(!clearArm){ clearArm=true; $("#clearQ").textContent="¿Seguro? Descartar"; setTimeout(()=>{clearArm=false;$("#clearQ").textContent="Descartar todas";},3000); return; } clearArm=false; queue=[]; $("#clearQ").textContent="Descartar todas"; render(); };
+
+$("#q").oninput = render; $("#fStatus").onchange = render;
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => { range=b.dataset.range; try{localStorage.setItem("lr_range",range);}catch{} render(); });
+$("#agenda").addEventListener("click", e => {
+  const row = e.target.closest(".row"); if (!row) return;
+  if (e.target.matches("[data-sel]")){ e.target.checked ? selected.add(row.dataset.id) : selected.delete(row.dataset.id); render(); return; }
+  openDetail(row.dataset.id);
+});
+$("#agenda").addEventListener("keydown", e => { const row=e.target.closest(".row"); if(row && e.target===row && e.key==="Enter") openDetail(row.dataset.id); });
+$("#selUnsent").onclick = () => { reservas.filter(r=>!r.enviada && r.estado!=="cancelada").forEach(r=>selected.add(r.id)); render(); };
+$("#selNone").onclick = () => { selected.clear(); render(); };
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest("dialog").close());
+document.querySelectorAll("dialog").forEach(d => d.addEventListener("click", e => { if (e.target===d) d.close(); }));
+
+function openBig(src){ $("#bigImg").src = src; $("#dBig").showModal(); }
+
+/* detail */
+let curId=null, delArm=false;
+function openDetail(id){
+  const r = reservas.find(x=>x.id===id); if(!r) return; curId=id; delArm=false; $("#dDel").textContent="Eliminar";
+  $("#dTitle").textContent = r.nombre || "Sin nombre";
+  $("#dEyebrow").textContent = `${fmtLong(r.fecha)} · ${r.hora||"--:--"}`;
+  $("#dImg").innerHTML = r.thumb ? `<img src="${r.thumb}" alt="Pantallazo original" data-big style="cursor:zoom-in">` : `<div class="noimg">Esta reserva se añadió a mano, sin pantallazo.</div>`;
+  $("#dForm").innerHTML = fieldHTML("d", r);
+  $("#dMeta").textContent = [r.creado?`Añadida el ${new Date(r.creado).toLocaleString("es-CO",{dateStyle:"medium",timeStyle:"short"})}`:"", r.enviada?`Enviada el ${new Date(r.enviada).toLocaleString("es-CO",{dateStyle:"medium",timeStyle:"short"})}`:"Aún no enviada"].filter(Boolean).join(" · ");
+  $("#dDetail").showModal();
+}
+$("#dImg").addEventListener("click", e => { if (e.target.matches("[data-big]")) openBig(e.target.src); });
+$("#dSave").onclick = async () => { const d = readForm($("#dForm")); if (await updateReserva(curId, d)){ toast("Cambios guardados"); $("#dDetail").close(); } };
+$("#dDel").onclick = async () => { if(!delArm){ delArm=true; $("#dDel").textContent="¿Seguro? Eliminar"; return; } await deleteReserva(curId); $("#dDetail").close(); toast("Reserva eliminada"); };
+
+/* send */
+function selRows(){ return reservas.filter(r=>selected.has(r.id)).sort((a,b)=>(a.fecha||"9").localeCompare(b.fecha||"9")||(a.hora||"9").localeCompare(b.hora||"9")); }
+function mailBody(rows){
+  const name = settings.restaurante ? ` — ${settings.restaurante}` : "";
+  const lines = [`Reservas${name}`, `Enviado el ${new Date().toLocaleString("es-CO",{dateStyle:"long",timeStyle:"short"})}`, ""];
+  let day = null;
+  rows.forEach(r => {
+    if (r.fecha !== day){ day = r.fecha; lines.push("", `=== ${fmtLong(day).toUpperCase()} ===`); }
+    lines.push(`• ${r.hora||"--:--"} · ${r.personas||"?"} personas · ${r.nombre||"Sin nombre"} [${r.estado.toUpperCase()}]`);
+    const det = [r.telefono&&`Tel: ${r.telefono}`, r.email&&`Correo: ${r.email}`, r.canal&&`Canal: ${r.canal}`, r.zona&&`Mesa/zona: ${r.zona}`, r.ocasion&&`Ocasión: ${r.ocasion}`].filter(Boolean);
+    if (det.length) lines.push("   "+det.join(" | "));
+    if (r.notas) lines.push("   Notas: "+r.notas);
+  });
+  const act = rows.filter(r=>r.estado!=="cancelada");
+  lines.push("", `Total: ${rows.length} ${rows.length===1?"reserva":"reservas"} · ${act.reduce((s,r)=>s+(+r.personas||0),0)} personas (sin contar canceladas).`);
+  return lines.join("\n");
+}
+function csv(rows){
+  const cols=["fecha","hora","nombre","personas","telefono","email","canal","estado","zona","ocasion","notas"];
+  const q = v => `"${String(v??"").replace(/"/g,'""')}"`;
+  return "﻿"+[cols.join(";"), ...rows.map(r=>cols.map(c=>q(r[c])).join(";"))].join("\r\n");
+}
+function refreshMail(){
+  const rows = selRows(); const body = mailBody(rows);
+  $("#sBody").textContent = body;
+  const to = $("#sTo").value.trim(); const subj = $("#sSubj").value;
+  const href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  $("#mailto").href = href;
+  $("#sNote").textContent = href.length>1900 ? "El mensaje es largo: si tu correo lo corta, usa «Copiar mensaje»." : "";
+}
+$("#sendBtn").onclick = () => {
+  const rows = selRows(); if(!rows.length) return;
+  const days = [...new Set(rows.map(r=>r.fecha).filter(Boolean))];
+  $("#sTitle").textContent = `${rows.length} ${rows.length===1?"reserva":"reservas"} para enviar`;
+  $("#sTo").value = settings.email || DEFAULT_EMAIL;
+  $("#sSubj").value = `Reservas ${settings.restaurante?settings.restaurante+" ":""}— ${days.length===1?fmtLong(days[0]):days.length?`${fmtLong(days[0])} a ${fmtLong(days[days.length-1])}`:"sin fecha"}`;
+  $("#dlCsv").hidden = !downloads;
+  refreshMail(); $("#dSend").showModal();
+};
+$("#sTo").oninput = refreshMail; $("#sSubj").oninput = refreshMail;
+$("#copyTo").onclick = () => copy($("#sTo").value.trim(), "Dirección copiada");
+$("#copyMail").onclick = () => copy(`Para: ${$("#sTo").value.trim()}\nAsunto: ${$("#sSubj").value}\n\n${mailBody(selRows())}`, "Mensaje copiado. Pégalo en un correo nuevo.");
+$("#dlCsv").onclick = async () => {
+  if (!downloads) return;
+  try { await downloads.save({ filename: `reservas-${TODAY}.csv`, data: new Blob([csv(selRows())],{type:"text/csv"}) }); }
+  catch(e){ if (e?.code!=="dismissed" && e?.code!=="declined") toast("No se pudo descargar el archivo."); }
+};
+$("#markSent").onclick = async () => {
+  const now = new Date().toISOString(); const ids=[...selected]; let ok=0;
+  $("#markSent").disabled=true;
+  for (const id of ids){ if (await updateReserva(id,{enviada:now})) ok++; }
+  $("#markSent").disabled=false;
+  selected.clear(); $("#dSend").close(); toast(`${ok} marcadas como enviadas`); render();
+};
+
+/* settings */
+$("#settingsBtn").onclick = () => { $("#setEmail").value = settings.email; $("#setName").value = settings.restaurante||""; $("#dSettings").showModal(); };
+$("#setSave").onclick = async () => {
+  const s = { email: $("#setEmail").value.trim() || DEFAULT_EMAIL, restaurante: $("#setName").value.trim() };
+  settings = s; render(); $("#dSettings").close();
+  if (db){ try { await db.doc("config/ajustes").set(s); toast("Ajustes guardados"); } catch { toast("No se pudieron guardar los ajustes para el equipo."); } }
+  else toast("Ajustes guardados en esta sesión");
+};
+
+/* ---------- boot ---------- */
+reservas = EXAMPLES.map(r=>({...r})); render();
+if (window.claude?.use){
+  claude.use("sample").then(async s => {
+    sample = s;
+    if (s){ const lim = await s.limits().catch(()=>null); if (!lim?.images){ sample=null; } }
+    if (!sample){ const n=$("#aiNote"); n.hidden=false; n.textContent="La lectura automática de pantallazos no está disponible en esta vista. Puedes subir la imagen igual y llenar la ficha mirándola."; }
+  });
+  claude.use("downloads").then(d => { downloads = d; });
+  claude.use("db").then(d => {
+    db = d;
+    if (!d){ const n=$("#dbNote"); render(); n.hidden=false; n.textContent="Inicia sesión en Claude para guardar las reservas y compartirlas con tu equipo. Ahora mismo lo que añadas se pierde al cerrar la página."; return; }
+    let timer = setTimeout(()=>{ const n=$("#dbNote"); n.hidden=false; n.textContent="No se puede conectar con el libro de reservas todavía. Lo que ves puede no estar al día."; }, 10000);
+    d.collection("reservas").onSnapshot(snap => {
+      if (!snap.metadata?.fromCache){ clearTimeout(timer); }
+      const rows = snap.docs.map(doc => ({ id: doc.id, ...normalize(doc.data()), thumb: doc.data().thumb||"", creado: doc.data().creado||"", enviada: doc.data().enviada||"" }));
+      usingExamples = rows.length===0;
+      reservas = usingExamples ? EXAMPLES.map(r=>({...r})) : rows;
+      render();
+    }, err => { clearTimeout(timer); const n=$("#dbNote"); n.hidden=false; n.textContent="Se perdió la conexión con el libro de reservas. Recarga la página para volver a intentarlo."; });
+    d.doc("config/ajustes").onSnapshot(snap => { if (snap.exists){ const v=snap.data(); settings = { email: v.email||DEFAULT_EMAIL, restaurante: v.restaurante||"" }; render(); } }, ()=>{});
+  });
+} else {
+  $("#aiNote").hidden=false; $("#aiNote").textContent="Abre esta página en Claude para que lea los pantallazos automáticamente.";
+}
+})();
+</script>
