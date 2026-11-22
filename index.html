@@ -6,7 +6,7 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>Libro de Reservas</title>
+<title>TAIKINSA Reservas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
@@ -33,7 +33,7 @@
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
 .wrap{max-width:1160px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
-h1{font-size:1.9rem;font-weight:700}
+h1{font-size:2.1rem;font-weight:700;letter-spacing:.04em}
 h2{font-size:1.25rem;font-weight:700}
 h3{font-size:1.05rem;font-weight:700}
 .eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
@@ -228,8 +228,8 @@ pre.mail{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--m
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <span class="eyebrow">Sala · Gestión de reservas</span>
-      <h1>Libro de Reservas</h1>
+      <span class="eyebrow">Libro de reservas</span>
+      <h1 id="brandName">TAIKINSA</h1>
       <span class="muted" id="today"></span>
     </div>
     <div class="stats" id="stats"></div>
@@ -413,7 +413,7 @@ $("#today").textContent = fmtLong(TODAY);
 let db = null, sample = null, downloads = null;
 let reservas = [];
 let usingExamples = true;
-let settings = { email: DEFAULT_EMAIL, restaurante: "", corte: "17:00", horas: 24, plantilla: DEFAULT_PLANTILLA };
+let settings = { email: DEFAULT_EMAIL, restaurante: "TAIKINSA", corte: "17:00", horas: 24, plantilla: DEFAULT_PLANTILLA };
 let mesas = DEFAULT_MESAS.map(m=>({...m}));
 let queue = [];
 let selected = new Set();
@@ -425,11 +425,29 @@ let planSvc = null; // set after settings
 let pickRes = null;           // reserva seleccionada para asignar en el plano
 let editing = false, draft = null, selMesa = null, mesaDelArm = false;
 
+const dayPlus = n => isoDay(new Date(Date.now()+n*864e5));
 const EXAMPLES = [
-  {id:"ej4",nombre:"Laura Pérez",telefono:"+57 312 557 0921",personas:2,fecha:TODAY,hora:"13:30",canal:"Web",estado:"confirmada",mesa:"m1",notas:"Vegetariana."},
-  {id:"ej1",nombre:"Ana María Gómez",telefono:"+57 300 412 8890",personas:4,fecha:TODAY,hora:"20:00",canal:"WhatsApp",estado:"confirmada",mesa:"t3",zona:"Terraza",ocasion:"Cumpleaños",notas:"Traen torta. Una persona celíaca."},
-  {id:"ej2",nombre:"Carlos Restrepo",telefono:"+57 315 220 1043",personas:2,fecha:TODAY,hora:"21:30",canal:"Instagram",estado:"pendiente",notas:"Pide mesa junto a la ventana."},
-  {id:"ej3",nombre:"Familia Ortiz",telefono:"+57 301 998 7712",personas:7,fecha:TOMORROW,hora:"13:00",canal:"Llamada",estado:"pendiente",mesa:"m8",zona:"Salón",notas:"Silla para bebé."},
+  // hoy · almuerzo
+  {id:"ej01",nombre:"Laura Pérez",telefono:"+57 312 557 0921",personas:2,fecha:TODAY,hora:"12:30",canal:"Web",estado:"confirmada",mesa:"m1",notas:"Vegetariana."},
+  {id:"ej02",nombre:"Andrés Villa",telefono:"+57 318 640 2215",personas:4,fecha:TODAY,hora:"13:00",canal:"WhatsApp",estado:"confirmada",mesa:"m3",ocasion:"Almuerzo de negocios",notas:"Necesitan factura a nombre de la empresa."},
+  {id:"ej03",nombre:"Valentina Ríos",telefono:"+57 304 771 9083",personas:3,fecha:TODAY,hora:"13:30",canal:"Instagram",estado:"confirmada",mesa:"t1",zona:"Terraza",notas:"Vienen con un perro pequeño."},
+  {id:"ej04",nombre:"Jorge y Marcela",telefono:"+57 310 288 4410",personas:2,fecha:TODAY,hora:"14:00",canal:"Llamada",estado:"cancelada",notas:"Cancelaron por lluvia."},
+  // hoy · cena
+  {id:"ej05",nombre:"Ana María Gómez",telefono:"+57 300 412 8890",personas:4,fecha:TODAY,hora:"19:30",canal:"WhatsApp",estado:"confirmada",mesa:"t3",zona:"Terraza",ocasion:"Cumpleaños",notas:"Traen torta. Una persona celíaca."},
+  {id:"ej06",nombre:"Sebastián Mejía",telefono:"+57 316 903 5527",personas:6,fecha:TODAY,hora:"20:00",canal:"Correo",email:"smejia@correo.com",estado:"confirmada",mesa:"m7",ocasion:"Despedida",notas:"Abono de $100.000 pagado por transferencia."},
+  {id:"ej07",nombre:"Carlos Restrepo",telefono:"+57 315 220 1043",personas:2,fecha:TODAY,hora:"20:30",canal:"Instagram",estado:"pendiente",notas:"Pide mesa junto a la ventana."},
+  {id:"ej08",nombre:"Daniela Castaño",telefono:"+57 320 145 6638",personas:2,fecha:TODAY,hora:"21:00",canal:"WhatsApp",estado:"pendiente",mesa:"m2",ocasion:"Aniversario",notas:"Quieren algo especial en el postre.",recordado:new Date(Date.now()-3*36e5).toISOString()},
+  {id:"ej09",nombre:"Felipe Arango",telefono:"+57 311 502 7781",personas:3,fecha:TODAY,hora:"21:30",canal:"Llamada",estado:"confirmada",mesa:"b1",zona:"Barra"},
+  // mañana
+  {id:"ej10",nombre:"Familia Ortiz",telefono:"+57 301 998 7712",personas:7,fecha:TOMORROW,hora:"13:00",canal:"Llamada",estado:"pendiente",mesa:"m8",zona:"Salón",notas:"Silla para bebé."},
+  {id:"ej11",nombre:"Camila Duque",telefono:"+57 305 330 1290",personas:2,fecha:TOMORROW,hora:"13:30",canal:"Web",estado:"confirmada",mesa:"t2",zona:"Terraza"},
+  {id:"ej12",nombre:"Grupo Oficina Nova",telefono:"+57 317 884 0042",personas:10,fecha:TOMORROW,hora:"20:00",canal:"Correo",email:"eventos@nova.co",estado:"pendiente",ocasion:"Cena de fin de año",notas:"Menú cerrado. Dos personas sin lactosa."},
+  {id:"ej13",nombre:"Mateo Londoño",telefono:"+57 300 667 2309",personas:4,fecha:TOMORROW,hora:"20:30",canal:"WhatsApp",estado:"confirmada",mesa:"m4",notas:"Alérgico al maní."},
+  // próximos días
+  {id:"ej14",nombre:"Isabela Gaviria",telefono:"+57 314 219 8876",personas:5,fecha:dayPlus(2),hora:"12:30",canal:"Instagram",estado:"pendiente",zona:"Terraza",ocasion:"Bautizo"},
+  {id:"ej15",nombre:"Ricardo Salazar",telefono:"+57 319 450 3321",personas:2,fecha:dayPlus(2),hora:"19:00",canal:"Llamada",estado:"confirmada",mesa:"m5"},
+  {id:"ej16",nombre:"Natalia Cardona",telefono:"+57 302 908 1145",personas:8,fecha:dayPlus(3),hora:"20:00",canal:"WhatsApp",estado:"pendiente",ocasion:"Cumpleaños 30",notas:"Piden decoración con globos rojos."},
+  {id:"ej17",nombre:"Esteban Muñoz",telefono:"+57 313 776 5402",personas:4,fecha:dayPlus(4),hora:"13:00",canal:"Web",estado:"confirmada",mesa:"m6",enviada:new Date(Date.now()-864e5).toISOString()},
 ].map(r=>({...r, ejemplo:true}));
 
 /* ---------- helpers ---------- */
@@ -572,6 +590,7 @@ async function deleteReserva(id){
 /* ---------- render: shared ---------- */
 function render(){
   $("#destShow").textContent = settings.email || DEFAULT_EMAIL;
+  $("#brandName").textContent = settings.restaurante || "TAIKINSA";
   const hoy = reservas.filter(r=>r.fecha===TODAY && r.estado!=="cancelada");
   const pax = arr => arr.reduce((s,r)=>s+(+r.personas||0),0);
   const pend = pendientes(); const urg = pend.filter(isUrgent);
@@ -995,7 +1014,7 @@ $("#settingsBtn").onclick = () => {
   $("#dSettings").showModal();
 };
 $("#setSave").onclick = async () => {
-  const s = { email: $("#setEmail").value.trim() || DEFAULT_EMAIL, restaurante: $("#setName").value.trim(),
+  const s = { email: $("#setEmail").value.trim() || DEFAULT_EMAIL, restaurante: $("#setName").value.trim() || "TAIKINSA",
     corte: $("#setCorte").value || "17:00", horas: Math.max(1, parseInt($("#setHoras").value,10)||24), plantilla: $("#setPlantilla").value.trim() || DEFAULT_PLANTILLA };
   settings = s; render(); $("#dSettings").close();
   if (db){ try { await db.doc("config/ajustes").set(s); toast("Ajustes guardados"); } catch { toast("No se pudieron guardar los ajustes para el equipo."); } }
@@ -1026,13 +1045,13 @@ if (window.claude?.use){
       if (pickRes && !reservas.some(r=>r.id===pickRes)) pickRes=null;
       render();
     }, () => { clearTimeout(timer); n.hidden=false; n.dataset.sticky="1"; n.textContent="Se perdió la conexión con el libro de reservas. Recarga la página para volver a intentarlo."; });
-    d.doc("config/ajustes").onSnapshot(snap => { if (snap.exists){ const v=snap.data(); settings = { email: v.email||DEFAULT_EMAIL, restaurante: v.restaurante||"", corte: v.corte||"17:00", horas: +v.horas||24, plantilla: v.plantilla||DEFAULT_PLANTILLA }; render(); } }, ()=>{});
+    d.doc("config/ajustes").onSnapshot(snap => { if (snap.exists){ const v=snap.data(); settings = { email: v.email||DEFAULT_EMAIL, restaurante: v.restaurante||"TAIKINSA", corte: v.corte||"17:00", horas: +v.horas||24, plantilla: v.plantilla||DEFAULT_PLANTILLA }; render(); } }, ()=>{});
     d.doc("config/plano").onSnapshot(snap => { if (snap.exists && Array.isArray(snap.data().mesas) && snap.data().mesas.length){ mesas = snap.data().mesas; if (!editing) render(); } }, ()=>{});
   });
 } else {
   $("#aiNote").hidden=false; $("#aiNote").textContent="Abre esta página en Claude para que lea los pantallazos automáticamente.";
   const n=$("#dbNote"); n.hidden=false; n.dataset.sticky="1";
-  n.innerHTML = 'Esta es una copia de muestra: aquí no se guardan reservas ni se leen pantallazos. Para usar el libro de verdad, ábrelo en Claude: <a href="https://claude.ai/artifact/2oa2CzAHg7hAegSD3ySMnn" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Libro de Reservas en Claude</a>.';
+  n.innerHTML = 'Esta es una copia de muestra: aquí no se guardan reservas ni se leen pantallazos. Para usar el libro de verdad, ábrelo en Claude: <a href="https://claude.ai/artifact/2oa2CzAHg7hAegSD3ySMnn" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">TAIKINSA Reservas en Claude</a>.';
 }
 })();
 </script>
