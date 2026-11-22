@@ -8,7 +8,7 @@
 :root{
   --bg:#ffffff; --surface:#ffffff; --sunk:#f8f2f2; --line:#e8dadb;
   --fg:#111111; --muted:#4b4344;
-  --accent:#7b1020; --accent-fg:#ffffff; --accent-soft:#f7e6e8; --accent-deep:#5c0a17;
+  --accent:#7b1020; --accent-fg:#ffffff; --accent-soft:#f7e6e8; --accent-deep:#5c0a17; --header:#3a0610; --header-edge:#7b1020; --brand-a:#c8162f;
   --amber:#9a5b00; --amber-soft:#fcf1dc;
   --ok:#2a6e3a; --ok-soft:#e3f2e6;
   --bad:#c0261f; --bad-soft:#fde4e2;
@@ -47,8 +47,9 @@ label.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--
 label.f input,label.f select,label.f textarea{font-size:.92rem}
 
 /* Header */
-header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;background:var(--accent);color:var(--accent-fg);border-radius:16px;padding:22px 24px;border-bottom:5px solid var(--accent-deep)}
-header.top .eyebrow,header.top .muted{color:#f3d6da}
+header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;background:var(--header);color:var(--accent-fg);border-radius:16px;padding:22px 24px;border-bottom:5px solid var(--header-edge)}
+header.top h1 .a{color:var(--brand-a)}
+header.top .eyebrow,header.top .muted{color:#e9c9ce}
 header.top .stat{border-color:transparent}
 header.top .stat b,header.top .stat span{color:var(--fg)}
 header.top .stat span{color:var(--muted)}
@@ -221,7 +222,7 @@ pre.mail{margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--m
   <header class="top">
     <div class="brand">
       <span class="eyebrow">Libro de reservas</span>
-      <h1 id="brandName">TAIKINSA</h1>
+      <h1 id="brandName">T<span class="a">A</span>IKINS<span class="a">A</span></h1>
       <span class="muted" id="today"></span>
     </div>
     <div class="stats" id="stats"></div>
@@ -582,7 +583,7 @@ async function deleteReserva(id){
 /* ---------- render: shared ---------- */
 function render(){
   $("#destShow").textContent = settings.email || DEFAULT_EMAIL;
-  $("#brandName").textContent = settings.restaurante || "TAIKINSA";
+  $("#brandName").innerHTML = esc(settings.restaurante || "TAIKINSA").replace(/a/gi, m => `<span class="a">${m}</span>`);
   const hoy = reservas.filter(r=>r.fecha===TODAY && r.estado!=="cancelada");
   const pax = arr => arr.reduce((s,r)=>s+(+r.personas||0),0);
   const pend = pendientes(); const urg = pend.filter(isUrgent);
